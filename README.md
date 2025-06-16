@@ -1,220 +1,137 @@
-# Neural Network for MNIST Handwritten Digit Recognition
+<div align="center">
 
-A C++ implementation of a Multi-Layer Perceptron (MLP) for recognizing handwritten digits using the MNIST dataset.
+<h1>MNIST_NN</h1>
 
-## 🎯 Demo
+<p><b>A multi-layer perceptron written from scratch in C++ that recognises handwritten digits.</b></p>
 
-![Demo](assets/demo.gif)
+<p>
+<img src="https://img.shields.io/badge/C++-17-00599C?logo=cplusplus&logoColor=white" alt="C++17">
+<img src="https://img.shields.io/badge/NN-from%20scratch-3B6EA8" alt="NN from scratch">
+<img src="https://img.shields.io/badge/MNIST-96.48%25%20test%20accuracy-2E8B57" alt="96.48% test accuracy">
+</p>
 
-*Interactive drawing application with real-time digit recognition*
+<img src="assets/demo.gif" alt="Drawing a digit and letting the network recognise it" width="600">
 
-## 🏆 Performance Results
+</div>
 
-**Achieved Accuracy: 96.48%** on test set (10,000 samples)
+# Overview
 
-### Per-Digit Accuracy Breakdown:
+The network, backpropagation and training loop are implemented without any ML library. It is trained on the MNIST dataset and reaches **96.48 %** accuracy on the 10,000 test images.
+
+The repository contains two projects:
+
+- **mlp**: Shared library with the neural network (perceptrons, layers, backpropagation, save/load)
+- **train**: Console app to train a model and evaluate it on the test set
+
+# Results
+
 | Digit | Accuracy | Correct/Total |
-|-------|----------|---------------|
-| 0     | 98.37%   | 964/980       |
-| 1     | 98.59%   | 1119/1135     |
-| 2     | 95.54%   | 986/1032      |
-| 3     | 96.34%   | 973/1010      |
-| 4     | 96.44%   | 947/982       |
-| 5     | 94.73%   | 845/892       |
-| 6     | 96.35%   | 923/958       |
-| 7     | 96.69%   | 994/1028      |
-| 8     | 96.10%   | 936/974       |
-| 9     | 95.24%   | 961/1009      |
+|:-----:|:--------:|:-------------:|
+| 0     | 98.37 %  | 964/980       |
+| 1     | 98.59 %  | 1119/1135     |
+| 2     | 95.54 %  | 986/1032      |
+| 3     | 96.34 %  | 973/1010      |
+| 4     | 96.44 %  | 947/982       |
+| 5     | 94.73 %  | 845/892       |
+| 6     | 96.35 %  | 923/958       |
+| 7     | 96.69 %  | 994/1028      |
+| 8     | 96.10 %  | 936/974       |
+| 9     | 95.24 %  | 961/1009      |
+| **All** | **96.48 %** | **9648/10000** |
 
-## 🚀 Building the Project
+# Network
 
-### Platform Support
-This project was developed and tested on Windows. While the code might work on Linux/Mac, it has not been tested on those platforms.
+| Layer          | Neurons | Activation |
+|:---------------|:-------:|:----------:|
+| Input          | 784 (28 × 28 pixels) | – |
+| Hidden 1       | 128     | Sigmoid    |
+| Hidden 2       | 64      | Sigmoid    |
+| Output         | 10      | Softmax    |
 
-### Required Dependencies
-Before building, you need to set up the following libraries in the `vendor` directory:
+## Training
 
-1. **OpenCV 4.11.0**
-   - Download from: https://opencv.org/releases/
-   - Extract to: `vendor/opencv/`
-   - Build the library following OpenCV's Windows build instructions
+- **Loss**: Cross-entropy (gradient of softmax + cross-entropy is `output - target`)
+- **Optimiser**: Stochastic gradient descent, learning rate 0.01, one sample at a time
+- **Initialisation**: Weights and biases uniform in [-1, 1]
+- **Early stopping**: Stops when the validation accuracy has not improved by at least 0.1 percentage points for 5 epochs (max. 100 epochs)
 
-2. **SFML 3.0.0**
-   - Download from: https://www.sfml-dev.org/download.php
-   - Extract to: `vendor/SFML-3.0.0/`
-   - Ensure the directory contains the following structure:
-     - `vendor/SFML-3.0.0/lib/`
-     - `vendor/SFML-3.0.0/include/`
-     - `vendor/SFML-3.0.0/bin/`
+## Dataset
 
-3. **Premake5**
-   - Download from: https://premake.github.io/
-   - Add to your system PATH or place in `vendor/premake5/`
+[MNIST in CSV format](https://pjreddie.com/projects/mnist-in-csv/), 70,000 images:
 
-### Build Scripts
+- **Training**: 48,000 images (first 80 % of `mnist_train.csv`)
+- **Validation**: 12,000 images (last 20 % of `mnist_train.csv`)
+- **Test**: 10,000 images (`mnist_test.csv`, only used for the final evaluation)
 
-The project uses a single build script that must be run from the project root:
+# Project Structure
+
+```
+MNIST_NN/
+├── mlp/               - Neural network library (mlp.dll)
+│   ├── include/       - mlp.h, perceptron.h
+│   └── src/
+├── train/             - Training and evaluation app
+│   ├── main.cpp       - train / eval commands
+│   ├── dataset.cpp    - MNIST CSV loader
+│   └── config.hpp     - Network configuration
+├── models/            - Pre-trained model
+├── data/              - Place the MNIST CSV files here (not in git)
+├── assets/            - Demo GIF
+├── scripts/           - Build script
+└── premake5.lua
+```
+
+# Build
+
+Developed and tested on Windows with Visual Studio 2022.
+
+## Dependencies
+
+No third-party libraries are needed, only [Premake5](https://premake.github.io/) in your `PATH`.
+
+## Build Script
+
+Run from the project root in a Developer Command Prompt:
 
 ```batch
-.\scripts\build.bat Release  # Builds Release configuration (default)
-.\scripts\build.bat Debug    # Builds Debug configuration
-.\scripts\build.bat All      # Builds both Debug and Release configurations
-```
-
-### Performance Note
-- Release mode is recommended for training (5-10x faster)
-- Debug mode training could take several hours
-- Drawing application works fine in either mode
-
-## 🧠 Network Architecture
-
-- **Input Layer**: 784 neurons (28×28 pixel images)
-- **Hidden Layer 1**: 128 neurons
-- **Hidden Layer 2**: 64 neurons  
-- **Output Layer**: 10 neurons (digits 0-9)
-- **Activation Function**: Sigmoid
-- **Learning Rate**: 0.01
-- **Training Epochs**: 100
-
-## 🔬 Training Algorithm
-
-### Backpropagation with Gradient Descent
-
-1. **Forward Pass**: Compute the outputs of the network for a given input
-2. **Compute Error**: Compare network output with expected output using loss function
-3. **Backward Pass (Backpropagation)**: Compute gradients of loss with respect to weights and biases
-4. **Update Weights**: Adjust weights and biases using gradient descent
-
-### Early Stopping
-- **Dataset Split**: 80% training, 20% validation
-- **Metric**: Validation accuracy (not training error)
-- **Patience**: 5 epochs
-- **Minimal Improvement**: 0.1% increase in validation accuracy
-- **Maximum Epochs**: 100 (may stop earlier due to early stopping)
-
-The training will automatically stop when the validation accuracy shows no improvement of at least 0.1% for 10 consecutive epochs, or when reaching 100 epochs, whichever comes first. This helps prevent overfitting and ensures the model generalizes well to new data.
-
-## 📁 Project Components
-
-- **MNIST Training (`MNIST/`)**:
-    - Purpose: Handles the training and evaluation of neural network models using the MNIST dataset.
-    - Key files: `MNIST/src/main.cpp` is the main entry point for training-related tasks. Model configurations and outputs are typically stored in `MNIST/models/`.
-
-- **Interactive Prediction (`draw_and_predict/`)**:
-    - Purpose: An SFML-based graphical application that allows users to draw a digit with the mouse and have a pre-trained model predict the digit.
-    - Key files: `draw_and_predict/src/main.cpp` contains the logic for the interactive drawing and prediction interface.
-
-- **MLP Library (`mlp/`)**:
-    - Purpose: A foundational library providing the implementation of a Multi-Layer Perceptron. This includes the core neural network structures like perceptrons, layers, and the backpropagation algorithm.
-    - Key files: Key interface is `mlp/include/mlp.h` and its implementation `mlp/src/mlp.cpp`. The basic building block, the perceptron, is defined in `mlp/include/perceptron.h`.
-
-## 🚀 Getting Started
-
-### Build the Project
-
-The project uses Premake5 for build configuration.
-
-#### Option 1: Using Premake5 directly
-```bash
-premake5 vs2022
-msbuild MultiLayerPerception.sln /p:Configuration=Debug /p:Platform=x64
-```
-
-#### Option 2: Using build script (Windows)
-```bash
-scripts/build.bat
-```
-
-### ⚠️ Performance Note
-
-This neural network runs entirely on CPU, which means training can be quite slow. For optimal performance:
-- Build and run training in **Release** mode, which is significantly faster than Debug mode
-
-### Train a New Model
-1. Uncomment `train();` in `MNIST/src/main.cpp`
-2. Build and run the MNIST project
-
-### Evaluate Pre-trained Model
-```batch
-cd bin\Release\MNIST
-.\MNIST.exe
-```
-
-### Use Interactive Drawing Application
-
-The `draw_and_predict` application provides a GUI for drawing digits and getting real-time predictions.
-
-#### Prerequisites
-- Ensure you have a trained model in the `models/` directory
-- OpenCV must be properly installed and configured
-
-#### Build and Run
-```batch
-# Build the project (includes draw_and_predict)
-.\scripts\build.bat Release
-
-# Navigate to the executable directory and run
-cd bin\Release\draw_and_predict
-.\draw_and_predict.exe
-```
-
-You can also build and run in debug mode if needed:
-```batch
+.\scripts\build.bat Release   :: default
 .\scripts\build.bat Debug
-cd bin\Debug\draw_and_predict
-.\draw_and_predict.exe
+.\scripts\build.bat All
 ```
 
-#### How to Use
-1. **Draw**: Use your mouse to draw a digit (0-9) in the drawing area
-2. **Predict**: Click the "PREDICT" button to recognize the drawn digit
-3. **Clear**: Click the "CLEAR" button to clear the canvas and start over
-4. **Exit**: Press ESC key or click the X button to close the application
+Or manually:
 
-#### Features
-- **Real-time drawing** with smooth brush strokes
-- **Instant recognition** results with confidence scores
-- **Probability bars** showing likelihood for each digit (0-9)
-- **Professional GUI** with intuitive controls
-
-## 📊 Dataset
-
-The MNIST dataset is split into three sets:
-
-**Total Dataset**: 70,000 images
-- **Training Set**: 48,000 images (80% of original training data)
-- **Validation Set**: 12,000 images (20% of original training data)
-- **Test Set**: 10,000 images (separate test set)
-
-Data source: [MNIST in CSV format](https://pjreddie.com/projects/mnist-in-csv/)
-
-The original `mnist_train.csv` (60,000 images) is split 80/20 into training and validation sets during the training process. The `mnist_test.csv` (10,000 images) is kept completely separate and only used for final model evaluation.
-
-## 🛠️ Dependencies
-
-- [OpenCV](https://github.com/opencv/opencv) 4.11.0 - Computer vision library
-- [SFML](https://www.sfml-dev.org/) 3.0.0 - Simple and Fast Multimedia Library (for interactive drawing app)
-- Visual Studio 2019/2022 - C++ compiler
-- Premake5 - Build system generator
-
-## 📁 Project Structure
-
-```
-NN/
-├── mlp/                    # Core neural network library
-├── MNIST/                  # MNIST training & evaluation
-├── draw_and_predict/       # Interactive digit drawing app
-├── scripts/                # Build scripts
-└── README.md
+```batch
+premake5 vs2022
+msbuild MultiLayerPerception.sln /p:Configuration=Release /p:Platform=x64
 ```
 
-## 🚀 Future Improvements
+Use **Release** for training, Debug is 5–10× slower.
 
-### 🧠 Neural Network Enhancements
-- **Convolutional Neural Networks (CNN)**: Implement convolutional layers for better spatial feature extraction
-- **Alternative Activation Functions**:
-  - ReLU and variants (Leaky ReLU,)
-- **Regularization Techniques**:
-  - Dropout layers to prevent overfitting
-  - Batch normalization for stable training
-  - L1/L2 weight regularization
+# Usage
+
+Download `mnist_train.csv` and `mnist_test.csv` from [here](https://pjreddie.com/projects/mnist-in-csv/) to `data/`. Run everything from the repository root.
+
+## Train a New Model
+
+```batch
+.\bin\Release\train\train.exe
+```
+
+The model is saved to `models/` with the training parameters in its name, e.g. `models/model_0.01_100_60000_128_64`.
+
+## Evaluate a Model
+
+```batch
+.\bin\Release\train\train.exe eval            :: pre-trained model
+.\bin\Release\train\train.exe eval <model>    :: other model
+```
+
+Prints the predictions for the first 20 test images, the overall accuracy and the accuracy per digit.
+
+# Future Improvements
+
+- Convolutional layers for better spatial features
+- ReLU / Leaky ReLU activations
+- Mini-batch training
+- Regularisation: dropout, batch normalisation, L1/L2

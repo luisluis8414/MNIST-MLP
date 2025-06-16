@@ -1,7 +1,18 @@
+/* ========================================================================== */
+/* perceptron.h                                                               */
+/* ========================================================================== */
+/**
+ * @file      perceptron.h
+ * @author    wehrberger
+ * @date      16.06.2025
+ *
+ * @brief     Single neuron with weights, bias and sigmoid activation.
+ */
+
 #pragma once
 
-#include <vector>
 #include <fstream>
+#include <vector>
 
 class Perceptron
 {

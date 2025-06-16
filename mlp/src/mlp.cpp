@@ -1,13 +1,24 @@
-#include "../include/mlp.h"
-#include <cmath>
-#include <iostream>
-#include <fstream>
-#include <stdexcept>
-#include <sstream>
-#include <algorithm>
-#include <limits>
+/* ========================================================================== */
+/* mlp.cpp                                                                    */
+/* ========================================================================== */
+/**
+ * @file      mlp.cpp
+ * @author    wehrberger
+ * @date      16.06.2025
+ *
+ * @brief     Implementation of the multi-layer perceptron.
+ */
 
-// The Layers structure now contains multiple hidden layers.
+#include "mlp.h"
+
+#include <algorithm>
+#include <cmath>
+#include <cstdio>
+#include <fstream>
+#include <iostream>
+#include <stdexcept>
+
+// Hidden layers and output layer of the network
 struct MLP::Layers
 {
     // Each hidden layer is represented as a vector of Perceptron.
@@ -19,7 +30,7 @@ struct MLP::Layers
 // Constructor: builds the network from input -> (multiple hidden layers) -> output.
 MLP::MLP(int inputSize, const std::vector<int> &hiddenSizes,
          int outputSize, double learningRate)
-    : m_Layers(new Layers())
+    : m_Layers(std::make_unique<Layers>())
 {
     int previousSize = inputSize;
     // Create each hidden layer.
@@ -41,6 +52,8 @@ MLP::MLP(int inputSize, const std::vector<int> &hiddenSizes,
     }
 }
 
+MLP::~MLP() = default;
+
 // Helper: calculates the output of a single layer.
 std::vector<double>
 MLP::computeLayerOutput(const std::vector<Perceptron> &layer,
@@ -60,10 +73,10 @@ MLP::computeLayerOutput(const std::vector<Perceptron> &layer,
     std::vector<double> outputs(layer.size(), 0.0);
     for (size_t i = 0; i < layer.size(); i++)
     {
-        outputs[i] = layer[i].calcOutputRaw(inputs); // Get raw output
+        outputs[i] = layer[i].calcOutputRaw(inputs);
         if (!skipActivation)
         {
-            outputs[i] = 1.0 / (1.0 + std::exp(-outputs[i])); // Apply sigmoid only for hidden layers
+            outputs[i] = layer[i].activate(outputs[i]); // Sigmoid, hidden layers only
         }
     }
     return outputs;
@@ -192,7 +205,7 @@ void MLP::train(const std::vector<double> &inputs,
 }
 
 // A helper for computing mean squared error over one training example.
-double meanSquaredError(const std::vector<double> &outputs,
+static double meanSquaredError(const std::vector<double> &outputs,
                         const std::vector<double> &targets)
 {
     if (outputs.size() != targets.size())

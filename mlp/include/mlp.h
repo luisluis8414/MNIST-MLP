@@ -1,8 +1,24 @@
+/* ========================================================================== */
+/* mlp.h                                                                      */
+/* ========================================================================== */
+/**
+ * @file      mlp.h
+ * @author    wehrberger
+ * @date      16.06.2025
+ *
+ * @brief     Multi-layer perceptron with sigmoid hidden layers and a softmax
+ *            output layer, trained by backpropagation.
+ *
+ * Built as a shared library (mlp.dll) and used by the MNIST training app.
+ */
+
 #pragma once
 
-#include <vector>
+#include <memory>
 #include <string>
-#include "Perceptron.h"
+#include <vector>
+
+#include "perceptron.h"
 
 #ifdef _WIN32
 #ifdef MLP_EXPORT
@@ -26,11 +42,24 @@ public:
      */
     MLP(int inputSize, const std::vector<int> &hiddenSizes,
         int outputSize, double learningRate = 0.1);
+    ~MLP();
 
-    // Forward pass: returns the network output for given inputs.
+    MLP(const MLP &) = delete;
+    MLP &operator=(const MLP &) = delete;
+
+    /**
+     * @brief Forward pass.
+     * @return Softmax probabilities of the output layer.
+     */
     std::vector<double> forward(const std::vector<double> &inputs);
 
-    // Training with early stopping based on validation accuracy.
+    /**
+     * @brief Trains the network with early stopping on validation accuracy.
+     *
+     * @param epochs              Maximum number of epochs.
+     * @param patience            Epochs without improvement before stopping.
+     * @param minimalImprovement  Required increase of validation accuracy.
+     */
     void startTraining(const std::vector<std::vector<double>> &trainingInputs,
                        const std::vector<std::vector<double>> &trainingTargets,
                        const std::vector<std::vector<double>> &validationInputs,
@@ -38,20 +67,22 @@ public:
                        int epochs, int patience = 5,
                        double minimalImprovement = 0.001);
 
-    // Save and load the model.
+    /** @brief Saves all weights and biases to a binary file. */
     void saveModel(const std::string &filename);
+
+    /** @brief Loads a model written by saveModel(). */
     void loadModel(const std::string &filename);
 
-    // Compute accuracy on a dataset
+    /** @brief Fraction of correctly classified samples (targets one-hot). */
     double computeAccuracy(const std::vector<std::vector<double>> &inputs,
                            const std::vector<std::vector<double>> &targets);
 
 private:
-    // PIMPL–style internal implementation.
+    // PIMPL-style internal implementation
     struct Layers;
-    Layers *m_Layers;
+    std::unique_ptr<Layers> m_Layers;
 
-    // A backpropagation training step.
+    // A backpropagation training step
     void train(const std::vector<double> &inputs,
                const std::vector<double> &targets);
 

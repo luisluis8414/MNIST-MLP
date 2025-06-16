@@ -1,7 +1,19 @@
-#include "../include/perceptron.h"
+/* ========================================================================== */
+/* perceptron.cpp                                                             */
+/* ========================================================================== */
+/**
+ * @file      perceptron.cpp
+ * @author    wehrberger
+ * @date      16.06.2025
+ *
+ * @brief     Implementation of the perceptron.
+ */
+
+#include "perceptron.h"
+
 #include <cmath>
-#include <stdexcept>
 #include <random>
+#include <stdexcept>
 
 // Constructor: Initialize weights and bias with random values
 Perceptron::Perceptron(int n, double learningRate)

@@ -1,98 +1,53 @@
+-- ========================================================================== --
+-- premake5.lua                                                               --
+-- ========================================================================== --
+-- Generates the Visual Studio solution: premake5 vs2022
+--
+--   mlp    Shared library with the neural network
+--   train  Training and evaluation on the MNIST dataset
+
+OUTPUT_DIR = "%{cfg.platform}/%{cfg.buildcfg}"
+
 workspace "MultiLayerPerception"
    architecture "x64"
    configurations { "Debug", "Release" }
+   language "C++"
+   cppdialect "C++17"
+   staticruntime "off"
+
+   filter "system:windows"
+      systemversion "latest"
+      defines { "PLATFORM_WINDOWS" }
+
+   filter "configurations:Debug"
+      defines "DEBUG"
+      runtime "Debug"
+      symbols "on"
+
+   filter "configurations:Release"
+      defines "NDEBUG"
+      runtime "Release"
+      optimize "on"
+
+   filter {}
 
 project "mlp"
    kind "SharedLib"
-   language "C++"
-   cppdialect "C++17"
-   staticruntime "off"
-   targetdir "bin/%{cfg.platform}/%{cfg.buildcfg}/mlp"
-   objdir "obj/%{cfg.platform}/%{cfg.buildcfg}/mlp"
+   targetdir ("bin/" .. OUTPUT_DIR .. "/mlp")
+   objdir ("obj/" .. OUTPUT_DIR .. "/mlp")
    files { "mlp/include/**.h", "mlp/src/**.cpp" }
    includedirs { "mlp/include" }
-   filter "system:windows"
-      systemversion "latest"
-      defines { "PLATFORM_WINDOWS", "MLP_EXPORT" }
-   filter "configurations:Debug"
-      defines "DEBUG"
-      runtime "Debug"
-      symbols "on"
-   filter "configurations:Release"
-      defines "NDEBUG"
-      runtime "Release"
-      optimize "on"
+   defines { "MLP_EXPORT" }
 
-project "MNIST"
+project "train"
    kind "ConsoleApp"
-   language "C++"
-   cppdialect "C++17"
-   staticruntime "off"
-   targetdir "bin/%{cfg.platform}/%{cfg.buildcfg}/MNIST"
-   objdir "obj/%{cfg.platform}/%{cfg.buildcfg}/MNIST"
-   files { "MNIST/src/**.hpp", "MNIST/src/**.cpp" }
-   includedirs { "mlp/include", "MNIST/src", "include" }
-   libdirs { "bin/%{cfg.platform}/%{cfg.buildcfg}/mlp", "lib" }
+   targetdir ("bin/" .. OUTPUT_DIR .. "/train")
+   objdir ("obj/" .. OUTPUT_DIR .. "/train")
+   files { "train/**.hpp", "train/**.cpp" }
+   includedirs { "mlp/include" }
+   libdirs { "bin/" .. OUTPUT_DIR .. "/mlp" }
    links { "mlp" }
-   debugdir "%{cfg.targetdir}"
+   debugdir "%{wks.location}"   -- data/ and models/ are relative to the repo root
    postbuildcommands {
-      "{COPY} bin/%{cfg.platform}/%{cfg.buildcfg}/mlp/mlp.dll %{cfg.targetdir}",
-      "{COPY} MNIST/resources %{cfg.targetdir}/resources",
-      "{COPY} MNIST/models %{cfg.targetdir}/models",
+      "{COPY} bin/" .. OUTPUT_DIR .. "/mlp/mlp.dll %{cfg.targetdir}",
    }
-   filter "system:windows"
-      systemversion "latest"
-      defines { "PLATFORM_WINDOWS" }
-   filter "configurations:Debug"
-      defines "DEBUG"
-      runtime "Debug"
-      symbols "on"
-      links { "opencv_world4110d" }
-      postbuildcommands {
-         "{COPY} vendor/opencv/build/x64/vc16/bin/opencv_world4110d.dll %{cfg.targetdir}",
-      }
-   filter "configurations:Release"
-      defines "NDEBUG"
-      runtime "Release"
-      optimize "on"
-      links { "opencv_world4110" }
-      postbuildcommands {
-         "{COPY} vendor/opencv/build/x64/vc16/bin/opencv_world4110.dll %{cfg.targetdir}",
-      }
-
-project "draw_and_predict"
-   kind "ConsoleApp"
-   language "C++"
-   cppdialect "C++17"
-   staticruntime "off"
-   targetdir "bin/%{cfg.platform}/%{cfg.buildcfg}/draw_and_predict"
-   objdir "obj/%{cfg.platform}/%{cfg.buildcfg}/draw_and_predict"
-   files { "draw_and_predict/src/**.hpp", "draw_and_predict/src/**.cpp" }
-   includedirs { "mlp/include", "draw_and_predict/src", "include" }
-   libdirs { "bin/%{cfg.platform}/%{cfg.buildcfg}/mlp", "lib" }
-   links { "mlp" }
-   debugdir "%{cfg.targetdir}"
-   postbuildcommands {
-      "{COPY} bin/%{cfg.platform}/%{cfg.buildcfg}/mlp/mlp.dll %{cfg.targetdir}",
-      "{COPY} MNIST/models %{cfg.targetdir}/models",
-   }
-   filter "system:windows"
-      systemversion "latest"
-      defines { "PLATFORM_WINDOWS" }
-   filter "configurations:Debug"
-      defines "DEBUG"
-      runtime "Debug"
-      symbols "on"
-      links { "opencv_world4110d" }
-      postbuildcommands {
-         "{COPY} vendor/opencv/build/x64/vc16/bin/opencv_world4110d.dll %{cfg.targetdir}",
-      }
-   filter "configurations:Release"
-      defines "NDEBUG"
-      runtime "Release"
-      optimize "on"
-      links { "opencv_world4110" }
-      postbuildcommands {
-         "{COPY} vendor/opencv/build/x64/vc16/bin/opencv_world4110.dll %{cfg.targetdir}",
-      }
-
